@@ -1,0 +1,27 @@
+{
+  "name": "tuner",
+  "version": "1.0.0",
+  "description": "tuner",
+  "main": "index.js",
+  "scripts": {
+    "tune": "tsx src/index.ts",
+    "test": "npx tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hir-247-30/tuner.git"
+  },
+  "author": "hir-247-30",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hir-247-30/tuner/issues"
+  },
+  "homepage": "https://github.com/hir-247-30/tuner#readme",
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "tsx": "^4.20.5"
+  }
+}
