@@ -2,6 +2,7 @@
   "name": "tuner",
   "version": "1.0.0",
   "description": "tuner",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "tune": "tsx src/index.ts",

@@ -25,7 +25,6 @@ class GuitarTuner {
     private detectPitch: any;
     private sampleRate: number = 44100;
     private recording: any;
-    private currentFrequency: number | null = null;
     private isRunning: boolean = false;
 
     constructor() {
@@ -45,8 +44,8 @@ class GuitarTuner {
     private findClosestString(frequency: number): { string: GuitarString; cents: number } | null {
         if (!frequency || frequency < 50 || frequency > 2000) return null;
 
-        let closestString = GUITAR_STRINGS[0];
-        let minCents = Math.abs(this.frequencyToCents(frequency, GUITAR_STRINGS[0].frequency));
+        let closestString = GUITAR_STRINGS[0]!;
+        let minCents = Math.abs(this.frequencyToCents(frequency, GUITAR_STRINGS[0]!.frequency));
 
         for (const string of GUITAR_STRINGS) {
             const cents = Math.abs(this.frequencyToCents(frequency, string.frequency));
@@ -148,7 +147,6 @@ class GuitarTuner {
                     const pitch = this.detectPitch(float32Array);
 
                     if (pitch && pitch > 50) {
-                        this.currentFrequency = pitch;
                         this.displayTuning(pitch);
                     }
 
@@ -198,7 +196,7 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error(chalk.red('未処理のPromise rejection:', reason));
     process.exit(1);
 });
@@ -236,6 +234,6 @@ export class TunerUtils {
         const noteIndex = (halfSteps + 9 + 48) % 12;
         const octave = Math.floor((halfSteps + 9 + 48) / 12);
 
-        return notes[noteIndex] + octave;
+        return notes[noteIndex]! + octave;
     }
 }
