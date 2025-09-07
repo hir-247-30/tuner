@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ギターチューナー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .frequency-display {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .note-display {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+
+        .meter-container {
+            position: relative;
+            height: 60px;
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .meter-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meter-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 100%;
+            background: #00ff00;
+            z-index: 2;
+        }
+
+        .meter-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.1s ease-out;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            z-index: 3;
+        }
+
+        .meter-scale {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.3em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.perfect {
+            background: rgba(0, 255, 0, 0.3);
+            color: #00ff00;
+        }
+
+        .status.sharp {
+            background: rgba(255, 0, 0, 0.3);
+            color: #ff6b6b;
+        }
+
+        .status.flat {
+            background: rgba(255, 165, 0, 0.3);
+            color: #ffa500;
+        }
+
+        .strings-guide {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 30px 0;
+        }
+
+        .string-indicator {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .string-indicator.active {
+            background: rgba(255, 215, 0, 0.5);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .string-indicator .string-name {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .string-indicator .string-note {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #ff6b6b;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎸 ギターチューナー</h1>
+
+    <div class="strings-guide">
+        <div class="string-indicator" data-string="0">
+            <div class="string-name">6弦</div>
+            <div class="string-note">E2</div>
+        </div>
+        <div class="string-indicator" data-string="1">
+            <div class="string-name">5弦</div>
+            <div class="string-note">A2</div>
+        </div>
+        <div class="string-indicator" data-string="2">
+            <div class="string-name">4弦</div>
+            <div class="string-note">D3</div>
+        </div>
+        <div class="string-indicator" data-string="3">
+            <div class="string-name">3弦</div>
+            <div class="string-note">G3</div>
+        </div>
+        <div class="string-indicator" data-string="4">
+            <div class="string-name">2弦</div>
+            <div class="string-note">B3</div>
+        </div>
+        <div class="string-indicator" data-string="5">
+            <div class="string-name">1弦</div>
+            <div class="string-note">E4</div>
+        </div>
+    </div>
+
+    <div class="frequency-display" id="frequency">--- Hz</div>
+    <div class="note-display" id="note">弦を弾いてください</div>
+
+    <div class="meter-container">
+        <div class="meter-background">
+            <div class="meter-scale">
+                <span>低い</span>
+                <span>高い</span>
+            </div>
+        </div>
+        <div class="meter-center"></div>
+        <div class="meter-indicator" id="indicator" style="left: 50%;"></div>
+    </div>
+
+    <div class="status" id="status">チューナーを開始してください</div>
+
+    <button id="startBtn">チューナーを開始</button>
+    <div class="error-message" id="error"></div>
+</div>
+
+<script>
+    // interface GuitarString {
+    //     name: string;
+    //     frequency: number;
+    //     note: string;
+    // }
+
+    class GuitarTuner {
+        constructor() {
+            this.audioContext = null;
+            this.analyser = null;
+            this.microphone = null;
+            this.rafID = null;
+            this.isRunning = false;
+
+            this.guitarStrings = [
+                { name: '6弦', frequency: 82.41, note: 'E2' },
+                { name: '5弦', frequency: 110.00, note: 'A2' },
+                { name: '4弦', frequency: 146.83, note: 'D3' },
+                { name: '3弦', frequency: 196.00, note: 'G3' },
+                { name: '2弦', frequency: 246.94, note: 'B3' },
+                { name: '1弦', frequency: 329.63, note: 'E4' }
+            ];
+
+            this.toleranceCents = 5;
+            this.bufferLength = 2048;
+            this.buffer = new Float32Array(this.bufferLength);
+
+            this.initializeElements();
+        }
+
+        initializeElements() {
+            this.freqDisplay = document.getElementById('frequency');
+            this.noteDisplay = document.getElementById('note');
+            this.indicator = document.getElementById('indicator');
+            this.status = document.getElementById('status');
+            this.startBtn = document.getElementById('startBtn');
+            this.errorMsg = document.getElementById('error');
+
+            this.startBtn.addEventListener('click', () => this.toggle());
+        }
+
+        async toggle() {
+            if (this.isRunning) {
+                this.stop();
+            } else {
+                await this.start();
+            }
+        }
+
+        async start() {
+            try {
+                this.errorMsg.textContent = '';
+
+                // マイクへのアクセスを要求
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 4096;
+
+                this.microphone = this.audioContext.createMediaStreamSource(stream);
+                this.microphone.connect(this.analyser);
+
+                this.isRunning = true;
+                this.startBtn.textContent = 'チューナーを停止';
+                this.status.textContent = 'ギターの弦を弾いてください';
+                this.status.className = 'status';
+
+                this.updatePitch();
+            } catch (error) {
+                this.errorMsg.textContent = 'マイクへのアクセスが拒否されました';
+                console.error('Error accessing microphone:', error);
+            }
+        }
+
+        stop() {
+            if (this.rafID) {
+                cancelAnimationFrame(this.rafID);
+            }
+
+            if (this.microphone) {
+                this.microphone.disconnect();
+            }
+
+            if (this.audioContext) {
+                this.audioContext.close();
+            }
+
+            this.isRunning = false;
+            this.startBtn.textContent = 'チューナーを開始';
+            this.status.textContent = 'チューナーを開始してください';
+            this.status.className = 'status';
+            this.freqDisplay.textContent = '--- Hz';
+            this.noteDisplay.textContent = '弦を弾いてください';
+            this.indicator.style.left = '50%';
+
+            // すべての弦インジケーターを非アクティブに
+            document.querySelectorAll('.string-indicator').forEach(el => {
+                el.classList.remove('active');
+            });
+        }
+
+        updatePitch() {
+            this.analyser.getFloatTimeDomainData(this.buffer);
+
+            const frequency = this.autoCorrelate(this.buffer, this.audioContext.sampleRate);
+
+            if (frequency > 0) {
+                this.displayTuning(frequency);
+            }
+
+            if (this.isRunning) {
+                this.rafID = requestAnimationFrame(() => this.updatePitch());
+            }
+        }
+
+        autoCorrelate(buffer, sampleRate) {
+            // 自己相関法による周波数検出
+            let SIZE = buffer.length;
+            let rms = 0;
+
+            for (let i = 0; i < SIZE; i++) {
+                rms += buffer[i] * buffer[i];
+            }
+            rms = Math.sqrt(rms / SIZE);
+
+            if (rms < 0.01) return -1; // 音が小さすぎる
+
+            let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+            for (let i = 0; i < SIZE / 2; i++) {
+                if (Math.abs(buffer[i]) < thres) {
+                    r1 = i;
+                    break;
+                }
+            }
+            for (let i = 1; i < SIZE / 2; i++) {
+                if (Math.abs(buffer[SIZE - i]) < thres) {
+                    r2 = SIZE - i;
+                    break;
+                }
+            }
+
+            buffer = buffer.slice(r1, r2);
+            SIZE = buffer.length;
+
+            let c = new Array(SIZE).fill(0);
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE - i; j++) {
+                    c[i] = c[i] + buffer[j] * buffer[j + i];
+                }
+            }
+
+            let d = 0;
+            while (c[d] > c[d + 1]) d++;
+
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < SIZE; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+
+            let T0 = maxpos;
+
+            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            let a = (x1 - 2 * x2 + x3) / 2;
+            let b = (x3 - x1) / 2;
+
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+
+        frequencyToCents(frequency, referenceFreq) {
+            return 1200 * Math.log2(frequency / referenceFreq);
+        }
+
+        findClosestString(frequency) {
+            if (!frequency || frequency < 50 || frequency > 2000) return null;
+
+            let closestString = this.guitarStrings[0];
+            let closestIndex = 0;
+            let minCents = Math.abs(this.frequencyToCents(frequency, this.guitarStrings[0].frequency));
+
+            for (let i = 0; i < this.guitarStrings.length; i++) {
+                const cents = Math.abs(this.frequencyToCents(frequency, this.guitarStrings[i].frequency));
+                if (cents < minCents) {
+                    minCents = cents;
+                    closestString = this.guitarStrings[i];
+                    closestIndex = i;
+                }
+            }
+
+            const cents = this.frequencyToCents(frequency, closestString.frequency);
+            return { string: closestString, cents, index: closestIndex };
+        }
+
+        displayTuning(frequency) {
+            const result = this.findClosestString(frequency);
+
+            if (!result) {
+                this.freqDisplay.textContent = '--- Hz';
+                this.noteDisplay.textContent = '音が検出されません';
+                return;
+            }
+
+            const { string, cents, index } = result;
+
+            // 周波数表示
+            this.freqDisplay.textContent = `${frequency.toFixed(1)} Hz`;
+            this.noteDisplay.textContent = `${string.name} (${string.note})`;
+
+            // アクティブな弦を表示
+            document.querySelectorAll('.string-indicator').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+
+            // メーターの位置を更新
+            const position = 50 + (cents / 50) * 40; // ±50セントを画面幅にマッピング
+            this.indicator.style.left = `${Math.max(10, Math.min(90, position))}%`;
+
+            // ステータス表示
+            if (Math.abs(cents) <= this.toleranceCents) {
+                this.status.textContent = '✓ 完璧です！';
+                this.status.className = 'status perfect';
+            } else if (cents < -this.toleranceCents) {
+                this.status.textContent = `↑ ${Math.abs(cents).toFixed(1)}セント低い - 弦を締めてください`;
+                this.status.className = 'status flat';
+            } else {
+                this.status.textContent = `↓ ${cents.toFixed(1)}セント高い - 弦を緩めてください`;
+                this.status.className = 'status sharp';
+            }
+        }
+    }
+
+    // アプリケーション初期化
+    const tuner = new GuitarTuner();
+</script>
+</body>
+</html>
